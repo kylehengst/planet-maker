@@ -1,16 +1,17 @@
 <template>
-  <div id="planets">
-    <button @click="loadPlanet('mercury')">Mercury</button>
-    <button @click="loadPlanet('venus')">Venus</button>
-    <button @click="loadPlanet('earth')">Earth</button>
-    <button @click="loadPlanet('mars')">Mars</button>
-    <button @click="loadPlanet('jupiter')">Jupiter</button>
-    <button @click="loadPlanet('saturn')">Saturn</button>
-    <button @click="loadPlanet('neptune')">Neptune</button>
-    <button @click="loadPlanet('extrasolar1')">Gliese 436 b</button>
-    <button @click="loadPlanet('extrasolar2')">55 Cancri f</button>
-    <button @click="loadPlanet('extrasolar3')">Gliese 581 c</button>
-    <button @click="loadPlanet('extrasolar4')">Kepler-7b</button>
+  <div id="planets" class="flex flex-col">
+    <Button @click="showGallery = !showGallery"
+      >{{ showGallery ? "Hide" : "Show" }} Gallery</Button
+    >
+    <div class="flex flex-col mt-2" v-if="showGallery">
+      <Button
+        @click="loadPlanet(p.image)"
+        v-for="(p, i) in planets"
+        :key="i"
+        :active="planetImage == p.image"
+        >{{ p.name }}</Button
+      >
+    </div>
   </div>
 </template>
 
@@ -18,12 +19,14 @@
 import HelloWorld from "./components/HelloWorld.vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { onBeforeUnmount } from "vue";
+import { onBeforeUnmount, ref } from "vue";
+import Button from "./components/Button.vue";
 
 export default {
   name: "App",
   components: {
     HelloWorld,
+    Button,
   },
   setup() {
     // scene
@@ -92,11 +95,30 @@ export default {
       renderer.domElement.parentElement.removeChild(renderer.domElement);
     });
 
+    const planetImage = ref("earth");
+    const showGallery = ref(false);
+
     return {
-      loadPlanet: (planet) => {
-        planetphong.map = planetloader.load(`img/planets/gallery_${planet}.jpg`);
+      loadPlanet: (image) => {
+        planetImage.value = image;
+        planetphong.map = planetloader.load(`img/planets/gallery_${image}.jpg`);
       },
-      planet: 'earth'
+      showGallery,
+      planetImage,
+      planets: [
+        { image: "mercury", name: "Mercury" },
+        { image: "venus", name: "Venus" },
+        { image: "earth", name: "Earth" },
+        { image: "mars", name: "Mars" },
+        { image: "jupiter", name: "Jupiter" },
+        { image: "saturn", name: "Saturn" },
+        { image: "neptune", name: "Neptune" },
+        { image: "extrasolar1", name: "Gliese 436 b" },
+        { image: "extrasolar2", name: "55 Cancri f" },
+        { image: "extrasolar3", name: "Gliese 581 c" },
+        { image: "extrasolar4", name: "Kepler-7b" },
+        { image: "extrasolar4", name: "Kepler-7b" },
+      ],
     };
   },
 };
@@ -111,5 +133,8 @@ body {
   z-index: 10;
   right: 10px;
   top: 10px;
+}
+#planets .button {
+  margin-bottom: 0.25rem;
 }
 </style>
