@@ -7,6 +7,10 @@
     <button @click="loadPlanet('jupiter')">Jupiter</button>
     <button @click="loadPlanet('saturn')">Saturn</button>
     <button @click="loadPlanet('neptune')">Neptune</button>
+    <button @click="loadPlanet('extrasolar1')">Gliese 436 b</button>
+    <button @click="loadPlanet('extrasolar2')">55 Cancri f</button>
+    <button @click="loadPlanet('extrasolar3')">Gliese 581 c</button>
+    <button @click="loadPlanet('extrasolar4')">Kepler-7b</button>
   </div>
 </template>
 
@@ -38,13 +42,23 @@ export default {
     );
     camera.position.z = 2;
 
-    // planet
-    const geo = new THREE.SphereGeometry(1, 32, 32);
-    const materialLoader = new THREE.TextureLoader();
-    const phong = new THREE.MeshPhongMaterial({
-      map: materialLoader.load("img/planets/gallery_earth.jpg"),
+    // starfield
+    const stargeo = new THREE.SphereGeometry(10, 32, 32);
+    const starloader = new THREE.TextureLoader();
+    const starphong = new THREE.MeshPhongMaterial({
+      map: starloader.load("img/tycho-skymap.jpg"),
+      side: THREE.BackSide,
     });
-    const planet = new THREE.Mesh(geo, phong);
+    const starmesh = new THREE.Mesh(stargeo, starphong);
+    scene.add(starmesh);
+
+    // planet
+    const planetgeo = new THREE.SphereGeometry(1, 32, 32);
+    const planetloader = new THREE.TextureLoader();
+    const planetphong = new THREE.MeshPhongMaterial({
+      map: planetloader.load("img/planets/gallery_earth.jpg"),
+    });
+    const planet = new THREE.Mesh(planetgeo, planetphong);
     scene.add(planet);
 
     // render
@@ -54,13 +68,13 @@ export default {
 
     // orbit controls
     let controls = new OrbitControls(camera, renderer.domElement);
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = -1.0;
+    // controls.autoRotate = true;
+    // controls.autoRotateSpeed = -1.0;
     controls.enableDamping = true;
 
     function animate() {
       requestAnimationFrame(animate);
-      planet.rotation.y -= 0.01;
+      planet.rotation.y -= 0.001;
       controls.update();
       renderer.render(scene, camera);
     }
@@ -80,8 +94,9 @@ export default {
 
     return {
       loadPlanet: (planet) => {
-        phong.map = materialLoader.load(`img/planets/gallery_${planet}.jpg`);
+        planetphong.map = planetloader.load(`img/planets/gallery_${planet}.jpg`);
       },
+      planet: 'earth'
     };
   },
 };
