@@ -1,25 +1,30 @@
 <template>
-  <div id="planets" class="flex flex-col">
-    <Button @click="showGallery = !showGallery"
-      >{{ showGallery ? "Hide" : "Show" }} Gallery</Button
-    >
-    <div class="flex flex-col mt-2" v-if="showGallery">
-      <Button
-        @click="loadPlanet(p.image)"
-        v-for="(p, i) in planets"
-        :key="i"
-        :active="planetImage == p.image"
-        >{{ p.name }}</Button
-      >
+  <div id="planets" class="flex -flex-col">
+    <div>
+      <Button @click="createPlanet">Create Planet</Button>
+    </div>
+    <div class="flex flex-col">
+      <Button @click="showGallery = !showGallery">Planet Gallery</Button>
+      <div class="flex flex-col mt-2" v-if="showGallery">
+        <Button
+          @click="loadPlanet(p.image)"
+          v-for="(p, i) in planets"
+          :key="i"
+          :active="planetImage == p.image"
+          >{{ p.name }}</Button
+        >
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { onBeforeUnmount, ref } from "vue";
+import { Application } from "./creator/app";
+
+import HelloWorld from "./components/HelloWorld.vue";
 import Button from "./components/Button.vue";
 
 export default {
@@ -29,6 +34,8 @@ export default {
     Button,
   },
   setup() {
+    const app = new Application();
+
     // scene
     const scene = new THREE.Scene();
 
@@ -58,11 +65,35 @@ export default {
     // planet
     const planetgeo = new THREE.SphereGeometry(1, 32, 32);
     const planetloader = new THREE.TextureLoader();
+    const planetAlphaloader = new THREE.TextureLoader();
     const planetphong = new THREE.MeshPhongMaterial({
       map: planetloader.load("img/planets/gallery_earth.jpg"),
+      alphaMap: planetAlphaloader.load("img/surface.png"),
+      transparent: false,
     });
     const planet = new THREE.Mesh(planetgeo, planetphong);
     scene.add(planet);
+
+    // water
+    const watergeo = new THREE.SphereGeometry(0.999, 32, 32);
+    const waterloader = new THREE.TextureLoader();
+    const waterphong = new THREE.MeshPhongMaterial({
+      map: waterloader.load("img/ocean.jpg"),
+    });
+    const water = new THREE.Mesh(watergeo, waterphong);
+    scene.add(water);
+
+    // fauna
+    const faunageo = new THREE.SphereGeometry(1.001, 32, 32);
+    const faunaloader = new THREE.TextureLoader();
+    const faunaphong = new THREE.MeshPhongMaterial({
+      map: waterloader.load("img/fauna.png"),
+      alphaMap: planetAlphaloader.load("img/surface.png"),
+      transparent: true,
+      opacity: 0,
+    });
+    const fauna = new THREE.Mesh(faunageo, faunaphong);
+    scene.add(fauna);
 
     // render
     const renderer = new THREE.WebGLRenderer();
@@ -78,6 +109,8 @@ export default {
     function animate() {
       requestAnimationFrame(animate);
       planet.rotation.y -= 0.001;
+      water.rotation.y -= 0.001;
+      fauna.rotation.y -= 0.001;
       controls.update();
       renderer.render(scene, camera);
     }
@@ -97,11 +130,35 @@ export default {
 
     const planetImage = ref("earth");
     const showGallery = ref(false);
+    const creatingPlanet = ref(false);
+    const renderingPlanet = ref(false);
 
     return {
       loadPlanet: (image) => {
+        creatingPlanet.value = false;
         planetImage.value = image;
         planetphong.map = planetloader.load(`img/planets/gallery_${image}.jpg`);
+        planetphong.transparent = false;
+        faunaphong.opacity = 0;
+      },
+      createPlanet: () => {
+        renderingPlanet.value = true;
+        app.render().then(() => {
+          console.log("done");
+          planetImage.value = "";
+          creatingPlanet.value = true;
+
+          planetphong.map = planetloader.load(`img/earth.jpg`);
+          planetphong.transparent = true;
+          planetphong.alphaMap = planetAlphaloader.load(
+            app.planetTexture.specular.canvas.toDataURL()
+          );
+
+          faunaphong.alphaMap = planetAlphaloader.load(
+            app.planetTexture.specular.canvas.toDataURL()
+          );
+          faunaphong.opacity = 0.5;
+        });
       },
       showGallery,
       planetImage,
@@ -117,8 +174,9 @@ export default {
         { image: "extrasolar2", name: "55 Cancri f" },
         { image: "extrasolar3", name: "Gliese 581 c" },
         { image: "extrasolar4", name: "Kepler-7b" },
-        { image: "extrasolar4", name: "Kepler-7b" },
       ],
+      creatingPlanet,
+      renderingPlanet,
     };
   },
 };
